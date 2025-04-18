@@ -1,0 +1,37 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Swift
+        uses: actions/setup-swift@v2
+        with:
+          swift-version: '5.5'
+
+      - name: Build project
+        run: swift build
+
+      - name: Run tests
+        run: swift test
+
+      - name: Archive build
+        run: swift build --configuration release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: SiliconMiner
+          path: .build/release
