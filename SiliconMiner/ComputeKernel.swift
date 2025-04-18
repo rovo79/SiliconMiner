@@ -1,4 +1,6 @@
 import Metal
+import os.log
+import simd
 
 // Define the compute kernel function
 func computeKernelFunction() -> String {
@@ -26,6 +28,7 @@ class ComputeKernel {
     var device: MTLDevice
     var commandQueue: MTLCommandQueue
     var pipelineState: MTLComputePipelineState
+    let log = OSLog(subsystem: "com.siliconminer", category: "ComputeKernel")
 
     init(device: MTLDevice) {
         self.device = device
@@ -36,26 +39,31 @@ class ComputeKernel {
     }
 
     func execute(input: KernelInput) -> KernelOutput {
-        let inputBuffer = device.makeBuffer(bytes: input.data, length: input.data.count * MemoryLayout<Float>.size, options: [])
-        let outputBuffer = device.makeBuffer(length: input.data.count * MemoryLayout<Float>.size, options: [])
+        do {
+            let inputBuffer = device.makeBuffer(bytes: input.data, length: input.data.count * MemoryLayout<Float>.size, options: [])
+            let outputBuffer = device.makeBuffer(length: input.data.count * MemoryLayout<Float>.size, options: [])
 
-        let commandBuffer = commandQueue.makeCommandBuffer()!
-        let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
-        commandEncoder.setComputePipelineState(pipelineState)
-        commandEncoder.setBuffer(inputBuffer, offset: 0, index: 0)
-        commandEncoder.setBuffer(outputBuffer, offset: 0, index: 1)
+            let commandBuffer = commandQueue.makeCommandBuffer()!
+            let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
+            commandEncoder.setComputePipelineState(pipelineState)
+            commandEncoder.setBuffer(inputBuffer, offset: 0, index: 0)
+            commandEncoder.setBuffer(outputBuffer, offset: 0, index: 1)
 
-        let gridSize = MTLSize(width: input.data.count, height: 1, depth: 1)
-        let threadGroupSize = MTLSize(width: min(pipelineState.maxTotalThreadsPerThreadgroup, input.data.count), height: 1, depth: 1)
-        commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
+            let gridSize = MTLSize(width: input.data.count, height: 1, depth: 1)
+            let threadGroupSize = MTLSize(width: min(pipelineState.maxTotalThreadsPerThreadgroup, input.data.count), height: 1, depth: 1)
+            commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
 
-        commandEncoder.endEncoding()
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
+            commandEncoder.endEncoding()
+            commandBuffer.commit()
+            commandBuffer.waitUntilCompleted()
 
-        let outputPointer = outputBuffer?.contents().bindMemory(to: Float.self, capacity: input.data.count)
-        let outputData = Array(UnsafeBufferPointer(start: outputPointer, count: input.data.count))
+            let outputPointer = outputBuffer?.contents().bindMemory(to: Float.self, capacity: input.data.count)
+            let outputData = Array(UnsafeBufferPointer(start: outputPointer, count: input.data.count))
 
-        return KernelOutput(data: outputData)
+            return KernelOutput(data: outputData)
+        } catch {
+            os_log("Error executing compute kernel: %@", log: log, type: .error, error.localizedDescription)
+            return KernelOutput(data: [])
+        }
     }
 }
