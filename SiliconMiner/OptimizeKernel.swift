@@ -1,6 +1,7 @@
 import Metal
 import os.log
 import simd
+import MetalPerformanceShaders
 
 class OptimizeKernel {
     var device: MTLDevice
@@ -69,5 +70,17 @@ class OptimizeKernel {
 
     func adaptiveKernelExecution(inputBuffer: MTLBuffer, outputBuffer: MTLBuffer, gridSize: MTLSize, threadGroupSize: MTLSize) {
         // Add code to implement adaptive algorithms to adjust behavior based on system load
+    }
+
+    func integrateMetalPerformanceShaders(inputBuffer: MTLBuffer, outputBuffer: MTLBuffer, gridSize: MTLSize, threadGroupSize: MTLSize) {
+        let commandBuffer = commandQueue.makeCommandBuffer()!
+        let commandEncoder = commandBuffer.makeComputeCommandEncoder()!
+        commandEncoder.setComputePipelineState(pipelineState)
+        commandEncoder.setBuffer(inputBuffer, offset: 0, index: 0)
+        commandEncoder.setBuffer(outputBuffer, offset: 0, index: 1)
+        commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
+        commandEncoder.endEncoding()
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
     }
 }
