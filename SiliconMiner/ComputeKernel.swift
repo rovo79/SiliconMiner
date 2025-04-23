@@ -26,6 +26,7 @@ class ComputeKernel {
     var device: MTLDevice
     var commandQueue: MTLCommandQueue
     var pipelineState: MTLComputePipelineState
+    var randomXWrapper: RandomXWrapper
 
     init(device: MTLDevice) {
         self.device = device
@@ -33,6 +34,7 @@ class ComputeKernel {
         let library = try! device.makeLibrary(source: computeKernelFunction(), options: nil)
         let function = library.makeFunction(name: "computeKernel")!
         self.pipelineState = try! device.makeComputePipelineState(function: function)
+        self.randomXWrapper = RandomXWrapper()
     }
 
     func execute(input: KernelInput) -> KernelOutput {
@@ -55,6 +57,13 @@ class ComputeKernel {
 
         let outputPointer = outputBuffer?.contents().bindMemory(to: Float.self, capacity: input.data.count)
         let outputData = Array(UnsafeBufferPointer(start: outputPointer, count: input.data.count))
+
+        // Calculate RandomX hash
+        let inputData = Data(bytes: input.data, count: input.data.count * MemoryLayout<Float>.size)
+        let hash = randomXWrapper.calculateHash(input: inputData)
+
+        // Use the hash in some way, for example, print it
+        print("RandomX Hash: \(hash)")
 
         return KernelOutput(data: outputData)
     }

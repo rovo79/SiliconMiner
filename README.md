@@ -32,3 +32,27 @@ To implement the compute kernel for mining XMR using the Metal framework in Swif
 5. **Test and Debug the Code**: Run the code and measure its performance. Use debugging tools such as breakpoints and print statements to identify and fix any issues.
 
 6. **Refine and Optimize the Code**: Experiment with different configurations and fine-tune the code as needed. Optimize the kernel code and parallelization strategies to improve performance.
+
+## Integration of RandomX Algorithm
+
+To integrate the RandomX algorithm into the existing code, follow these steps:
+
+1. **Add the RandomX Library**: Download the RandomX source code from its official repository and include it in your project.
+
+2. **Create a Swift Wrapper for RandomX**: Create a new Swift file to wrap the RandomX functions and make them accessible from your Swift code.
+
+3. **Modify Compute Kernel Functions**: Modify the existing compute kernel functions to use the RandomX algorithm for mining.
+
+4. **Update the Execute Function**: Update the `execute` function to call the RandomX hash calculation functions.
+
+## Building and Running the Project with RandomX Algorithm
+
+To build and run the project with the RandomX algorithm, follow these steps:
+
+1. **Clone the Repository**: Clone the repository to your local machine.
+
+2. **Install Dependencies**: Install the necessary dependencies, including the RandomX library.
+
+3. **Build the Project**: Build the project using Xcode or the Swift Package Manager.
+
+4. **Run the Project**: Run the project and verify that the RandomX algorithm is being used for mining.
