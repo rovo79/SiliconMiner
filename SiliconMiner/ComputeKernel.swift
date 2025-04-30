@@ -27,6 +27,7 @@ class ComputeKernel {
     var commandQueue: MTLCommandQueue
     var pipelineState: MTLComputePipelineState
     var randomXWrapper: RandomXWrapper
+    var networkManager: NetworkManager
 
     init(device: MTLDevice) {
         self.device = device
@@ -35,6 +36,7 @@ class ComputeKernel {
         let function = library.makeFunction(name: "computeKernel")!
         self.pipelineState = try! device.makeComputePipelineState(function: function)
         self.randomXWrapper = RandomXWrapper()
+        self.networkManager = NetworkManager.shared
     }
 
     func execute(input: KernelInput) -> KernelOutput {
@@ -66,5 +68,24 @@ class ComputeKernel {
         print("RandomX Hash: \(hash)")
 
         return KernelOutput(data: outputData)
+    }
+
+    func receiveMiningJob(completion: @escaping (Result<KernelInput, Error>) -> Void) {
+        networkManager.requestMiningJob { result in
+            switch result {
+            case .success(let jobData):
+                // Parse jobData to create KernelInput
+                let inputData = jobData["inputData"] as? [Float] ?? []
+                let kernelInput = KernelInput(data: inputData)
+                completion(.success(kernelInput))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
+    func submitMiningResult(result: KernelOutput, completion: @escaping (Result<Bool, Error>) -> Void) {
+        let resultData: [String: Any] = ["outputData": result.data]
+        networkManager.submitMiningResult(result: resultData, completion: completion)
     }
 }

@@ -5,9 +5,11 @@ class RandomXWrapper {
     private var cache: OpaquePointer?
     private var dataset: OpaquePointer?
     private var vm: OpaquePointer?
+    private var poolManager: PoolManager
 
     init() {
         randomx_init()
+        self.poolManager = PoolManager.shared
     }
 
     deinit {
@@ -49,5 +51,24 @@ class RandomXWrapper {
             }
         }
         return hash
+    }
+
+    func handlePoolSwitching() {
+        poolManager.switchPool { result in
+            switch result {
+            case .success(let success):
+                if success {
+                    print("Switched to a new pool successfully.")
+                } else {
+                    print("Failed to switch to a new pool.")
+                }
+            case .failure(let error):
+                print("Error switching pool: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func logPoolManagement(message: String) {
+        print("Pool Management Log: \(message)")
     }
 }
